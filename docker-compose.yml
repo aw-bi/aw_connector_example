@@ -1,0 +1,10 @@
+services:
+  aw-connector-example:
+    build: .
+    environment:
+      ETL_S3_URL: ${ETL_S3_URL}
+      ETL_S3_BUCKET: ${ETL_S3_BUCKET:-aw-etl}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "${CONNECTOR_PORT}:8080"
+    command: ["uvicorn", "aw_connector_example.main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "${LOG_LEVEL:-info}"]
