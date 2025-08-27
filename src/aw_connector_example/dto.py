@@ -148,7 +148,7 @@ class ObjectData(BaseModel):
     )
 
 
-class FilterDto(BaseModel):
+class ParquetFilterDto(BaseModel):
     """ 
     Условие на выгрузку данных в parquet
     """
@@ -333,7 +333,7 @@ class ParquetRequest(BaseModel):
         description='Путь к S3-папке, в которую нужно выгрузить данные',
         examples=['s3://runs/2025-08-21_01-02-03-preview-68d9/data.parquet'],
     )
-    filters: list[FilterDto] | None = Field(
+    filters: list[ParquetFilterDto] | None = Field(
         default=None,
         description='Список условий, которые нужно применить к выборке записей. Условия соединяются через AND',
         examples=[None]
