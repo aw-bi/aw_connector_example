@@ -267,7 +267,7 @@ class ObjectDataRequest(BaseModel):
     )
     page: int | None = Field(
         default=1,
-        description='Индекс страницы с данными (нумерация начинается с 0)',
+        description='Индекс страницы с данными (нумерация начинается с 1)',
         examples=[1],
     )
     page_size: int | None = Field(
@@ -311,7 +311,7 @@ class SqlDataRequest(BaseModel):
     )
     page: int | None = Field(
         default=1,
-        description='Индекс страницы с данными (нумерация начинается с 0)',
+        description='Индекс страницы с данными (нумерация начинается с 1)',
         examples=[1],
     )
     page_size: int | None = Field(
