@@ -33,7 +33,7 @@ from aw_connector_example.routers.data_source import router
         },
         202: {
             'description': 'Выгрузка данных начата. Повторить запрос через Retry-After секунд URL из Location '
-                           '(Retry-After и Location указываются в заголовках ответа)',
+            '(Retry-After и Location указываются в заголовках ответа)',
             'content': {'application/json': {'example': 'null'}},
         },
     },
@@ -51,12 +51,12 @@ async def parquet(
     """
     Выгружает данные объекта источника (или SQL-запроса к источнику) в parquet.
 
-    В этом примере пользовательского коннектора реализованы оба способа взаимодействия с API 
+    В этом примере пользовательского коннектора реализованы оба способа взаимодействия с API
     по выгрузке данных в parquet:
 
-    * Синхронный режим. Отправить запроса получает ответ по окончанию выгрузки 
+    * Синхронный режим. Отправить запроса получает ответ по окончанию выгрузки
       (HTTP 200 при успешном завершении, либо HTTP 400+ при наличии ошибок);
-    * Асинхронный режим. Отправитель запроса после начала выгрузки получает ответ со статусом HTTP 202. 
+    * Асинхронный режим. Отправитель запроса после начала выгрузки получает ответ со статусом HTTP 202.
       При этом, в заголовках ответа указыватся:
         * Location: URL, по которому нужно проверить состояние выгрузки в следующий раз;
         * Retry-After: cделать запрос по URL из Location через столько секунд.
@@ -66,11 +66,12 @@ async def parquet(
     )
 
     async def export_to_parquet():
-
         if request.object.type == 'sql':
             if not request.object.query_text:
-                raise Exception('Для объекта с типом sql не указан текст sql-запроса (параметр query_text)')
-            
+                raise Exception(
+                    'Для объекта с типом sql не указан текст sql-запроса (параметр query_text)'
+                )
+
             object_data = await data_repo.get_sql_data(
                 data_source=request.object.data_source,
                 sql_text=request.object.query_text,
@@ -88,6 +89,13 @@ async def parquet(
             )
 
         parquet_table = await parquet_service.read_table(object_data)
+
+        if request.object.fields:
+            # указан явный список столбцов, оставляем в таблице для выгрузки только их
+            parquet_table = parquet_table.drop_columns(
+                {c for c in parquet_table.column_names}
+                - {f.name for f in request.object.fields}
+            )
 
         if request.folder.startswith('s3://'):
             # Выгрузка в S3

@@ -16,7 +16,7 @@ from aw_connector_example.dto import (
     ObjectMeta,
     ObjectColumnMeta,
     SimpleType,
-    ParquetFilterDto,
+    ParquetFilterExpr,
 )
 
 
@@ -104,7 +104,7 @@ class DataRepository:
         object_name: str,
         limit: int | None = None,
         offset: int | None = None,
-        filters: list[ParquetFilterDto] | None = None,
+        filters: list[ParquetFilterExpr] | None = None,
     ) -> list[dict]:
         """ """
         rows = await self.get_rows(data_source, object_name)
@@ -134,7 +134,7 @@ class DataRepository:
         sql_text: str,
         limit: int | None = None,
         offset: int | None = None,
-        filters: list[ParquetFilterDto] | None = None,
+        filters: list[ParquetFilterExpr] | None = None,
     ) -> list[dict]:
         """
         Получение данных SQL запроса
@@ -218,7 +218,7 @@ class DataRepository:
         return ctx.execute(sql_text).collect().to_dicts()
     
     @staticmethod
-    def apply_filters(rows: list[dict], filters: list[ParquetFilterDto]) -> list[dict]:
+    def apply_filters(rows: list[dict], filters: list[ParquetFilterExpr]) -> list[dict]:
         """ 
         Применяет список фильтров к строкам данных
         """

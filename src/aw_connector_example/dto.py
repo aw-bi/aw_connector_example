@@ -9,9 +9,7 @@ class DataSource(BaseModel):
     Описание источника данных
     """
 
-    id: int = Field(
-        description='Идентификатор источника в AW BI', examples=[10]
-    )
+    id: int = Field(description='Идентификатор источника в AW BI', examples=[10])
 
     type: str = Field(description='Тип источника', examples=['my-data-source'])
 
@@ -85,9 +83,16 @@ class ForeignKeyMeta(BaseModel):
     """
 
     column_name: str = Field(description='Столбец в текущем объекта', examples=['id'])
-    foreign_table_schema: str = Field(description='Схема внешнего объекта', examples=['public'])
-    foreign_table_name: str = Field(description='Название внешнего объекта', examples=['table2'])
-    foreign_column_name: str = Field(description='Столбц внешнего объекта, связанного с column_name текеущего объекта', examples=['id'])
+    foreign_table_schema: str = Field(
+        description='Схема внешнего объекта', examples=['public']
+    )
+    foreign_table_name: str = Field(
+        description='Название внешнего объекта', examples=['table2']
+    )
+    foreign_column_name: str = Field(
+        description='Столбц внешнего объекта, связанного с column_name текеущего объекта',
+        examples=['id'],
+    )
 
 
 class ObjectMeta(BaseModel):
@@ -148,27 +153,31 @@ class ObjectData(BaseModel):
     )
 
 
-class ParquetFilterDto(BaseModel):
-    """ 
+class ParquetFilterExpr(BaseModel):
+    """
     Условие на выгрузку данных в parquet
     """
+
     field_name: str | None = None
     operator: str | None = None
     value: Any
 
 
-class ParquetObjectFieldDto(BaseModel):
-    """ 
-    Поле в объекта
+class ParquetObjectField(BaseModel):
     """
-    name: str = Field(description='Название поля AW')
-    type: SimpleType = Field(description='Тип поля AW BI')
+    Поле выгружаемого в parquet объекта
+    """
+
+    name: str = Field(description='Название поля', examples=['name'])
+    type: SimpleType = Field(description='Тип поля AW BI', examples=['string'])
 
 
-class ParquetObjectDto(BaseModel):
+class ParquetObject(BaseModel):
     """
     Объект, для которого выполняется выгрузка данных в parquet
     """
+
+    data_source: DataSource = Field(..., description='Описание источника данных')
 
     name: str = Field(
         ...,
@@ -177,11 +186,29 @@ class ParquetObjectDto(BaseModel):
         examples=['public.table2'],
     )
 
-    type: str = Field(..., description="Тип объекта источника (sql или тип объекта источника)", examples=['table'])
-    query_text: str | None = Field(default=None, description='Текст SQL запроса для объекта источника. Используется в случае type: sql', examples=[None])
+    type: str = Field(
+        ...,
+        description='Тип объекта источника (sql или тип объекта источника)',
+        examples=['table'],
+    )
 
-    data_source: DataSource = Field(..., description='Описание источника данных')
+    query_text: str | None = Field(
+        default=None,
+        description='Текст SQL запроса для объекта источника. Используется в случае type: sql',
+        examples=[None],
+    )
 
+    fields: list[ParquetObjectField] | None = Field(
+        default=None,
+        description='Список полей объекта, которые необходимо выгрузить в parquet. Если пусто, то выгружаются все поля',
+        examples=[
+            [
+                {'name': 'id', 'type': 'number'},
+                {'name': 'name', 'type': 'string'},
+                {'name': 'created_at', 'type': 'date'}
+            ]
+        ],
+    )
 
 
 # -----------------------------------------------------------------------
@@ -324,7 +351,7 @@ class ParquetRequest(BaseModel):
     Запрос на выгрузку данных в parquet
     """
 
-    object: ParquetObjectDto = Field(
+    object: ParquetObject = Field(
         ...,
         description='Объект в источнике данных, для которого нужно выгрузить данные',
     )
@@ -333,13 +360,18 @@ class ParquetRequest(BaseModel):
         description='Путь к S3-папке, в которую нужно выгрузить данные',
         examples=['s3://runs/2025-08-21_01-02-03-preview-68d9/data.parquet'],
     )
-    filters: list[ParquetFilterDto] | None = Field(
+    filters: list[ParquetFilterExpr] | None = Field(
         default=None,
         description='Список условий, которые нужно применить к выборке записей. Условия соединяются через AND',
-        examples=[None]
+        examples=[
+            [
+                {'field_name': 'id', 'operator': '>', 'value': '1'},
+                {'value': 'id < 5'}
+            ]
+        ],
     )
     limit: int | None = Field(
         default=None,
         description='Ограничение на количество записей, которое нужно выгрузить в parquet',
-        examples=[None]
+        examples=[None],
     )
